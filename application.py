@@ -7,7 +7,6 @@ from session_layer import SessionLayer
 from user_layer import UserLayer
 from spotify_api import SpotifyLayer
 from authentication_layer import AuthenticationLayer
-from dataclass_templates import UserObject, SessionObject
 
 
 app = Flask(__name__, template_folder='templates/')
@@ -64,6 +63,7 @@ def show_login_page():
         else:
             return render_template('error.html', error="An Unexpected IP Mismatch Error Occurred")
 
+        # Logged In and User ID check
         if logged_in is True and user_id is not None:
             print("Detected: Session Logged In and Session User Id is not None")
             return redirect('/app')
@@ -74,12 +74,11 @@ def show_login_page():
     elif request.method == "POST":
         session['session_current_route'] = "login_post"
         username = request.form.get("username")
-        plaintext_password = request.form.get('password')
+        password = auth.hashPassword(request.form.get('password'))
 
+        success, user_id = user.checkIfUserExists()  # TODO Implement the return auth flow, handle auth-flow func.
 
-        user_id = ""
-
-        if True:  # If login is successful go to app
+        if success:  # If login is successful go to app
             session['logged_in'] = "True"
             session['username'] = user_id
             return redirect('/app')
@@ -94,7 +93,7 @@ def show_link_page():
 
     logged_in, user_id = user.idAndLoginDeclaration()
 
-    if logged_in == True and user_id is not None:
+    if logged_in is True and user_id is not None:
         if user.checkIfUserExists(user_id, error_response=False) is False:
             session['session_logged_in'] = "False"
             session["session_user_id"] = None
@@ -142,14 +141,14 @@ def applet():
     session['session_current_route'] = "app"
 
     if session.get('session_logged_in', None) != "True":
-        print("App - Detected: Session not Logged In")
+        print("Detected: Session not Logged In")
         user_login_token = request.cookies.get('user_login_token')
         if user_login_token is None:
-            print("App - Detected: No User Login Token")
-            return redirect('/index')
+            print("Detected: No User Login Token")
+            return redirect('/')
 
     if user.checkIfUserExists(session.get('session_user_id', None), error_response=False) is False:
-        print("App - Detected: Session User ID not valid")
+        print("Detected: Session User ID not valid")
 
         session['session_user_id'] = None
         session['session_logged_in'] = "False"
