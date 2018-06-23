@@ -1,7 +1,6 @@
 import time
 
 from flask import request, render_template, redirect, session
-from flask_session import Session
 
 import database_layer
 import authentication_layer
@@ -48,7 +47,8 @@ class UserLayer(object):
         elif check_method is 'user_email' or 'user_spotify_id':
             data_object = self.user_database.scanFromDatabase(scan_attr=check_method, attr_value=user_creds,
                                                               except_return=error_response, no_key_return=False)
-            if data_object is False or error_response:
+
+            if data_object is False or data_object is error_response:
                 if return_user_data:
                     return data_object, None
                 return data_object
@@ -111,6 +111,8 @@ class UserLayer(object):
         if success:
             pass
         else:
+            if return_user_object:
+                return False, None
             return False
         if return_user_object:
             return True, user_dict
@@ -200,7 +202,7 @@ class UserLayer(object):
                                                                   return_user_data=True)
 
         # If the email exists in the db.
-        if email_exists is True:
+        if email_exists:
             # If the user data is a list.
             if type(existing_user_data) is list:
                 existing_user_data = existing_user_data[0]
@@ -208,6 +210,8 @@ class UserLayer(object):
             try:
                 hash_pass = existing_user_data['user_password_hash']
             except KeyError:
+                hash_pass = None
+            except TypeError:
                 hash_pass = None
 
             session['session_logged_in'] = 'True'
@@ -242,17 +246,21 @@ class UserLayer(object):
                                                                 user_spotify_id=spotify_id,
                                                                 user_email=spotify_email,
                                                                 user_first_name=display_name,
-                                                                return_user_object=True
-                                                                )
+                                                                return_user_object=True)
 
         if not updated:
             return except_return
 
         if user_object['user_spotify_associated'] != "True":
-            print("Callback - Detected: User ID does not have Spotify Associated")
+            print("Detected: User ID does not have Spotify Associated")
             return render_template('error.html', error="An Unexpected State Mismatch Error Occurred")
 
         session['session_logged_in'] = "True"
         session['session_user_id'] = user_id
 
         return render_template('set_password.html', user_id=user_id)
+
+    # TODO fix the method
+    @staticmethod
+    def handleLogin():
+        print("login Handle")
