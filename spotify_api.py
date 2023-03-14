@@ -7,8 +7,8 @@ import requests
 class SpotifyLayer(object):
     def __init__(self):
         # noinspection SpellCheckingInspection
-        self.client_id = 'eade368b604f4fbdaebefba15de20d58'
-        self.client_secret = '46ce084bf35e4a82a488b628c1c5e138'
+        self.client_id = 'N/A'
+        self.client_secret = 'N/A'
 
         self.auth_endpoint = "https://accounts.spotify.com/authorize"
         self.token_endpoint = "https://accounts.spotify.com/api/token"
